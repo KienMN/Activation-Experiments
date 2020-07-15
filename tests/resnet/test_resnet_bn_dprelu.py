@@ -36,20 +36,11 @@ base_model = tf.keras.applications.ResNet50(
 def dprelu_layer_factory():
   return DPReLU(shared_axes=[1, 2], name='dprelu')
 
-def normal_layer_factory():
-  return tf.keras.layers.Layer(name='nl')
-
 # Replace ReLU activation layer
 base_model = insert_layer_nonseq(base_model, '.*relu.*', dprelu_layer_factory, position='replace')
 # Fix possible problems with new model
-base_model.save(work_dir + '/temp.h5')
-base_model = load_model(work_dir + '/temp.h5', custom_objects={'DPReLU': DPReLU})
-
-# Skip batch normalization layer
-base_model = insert_layer_nonseq(base_model, '.*bn', normal_layer_factory, position='replace')
-# Fix possible problems with new model
-base_model.save(work_dir + '/temp.h5')
-base_model = load_model(work_dir + '/temp.h5', custom_objects={'DPReLU': DPReLU})
+base_model.save(work_dir + '/temp2.h5')
+base_model = load_model(work_dir + '/temp2.h5', custom_objects={'DPReLU': DPReLU})
 
 print(base_model.summary())
 
@@ -101,6 +92,6 @@ metrics = pd.DataFrame(metrics)
 print(metrics)
 
 # Save results
-dprelu_weights.to_csv(work_dir + '/avg_dprelu_weights.csv', index=False)
-metrics.to_csv(work_dir + '/dprelu_metrics.csv', index=False)
-base_model.save(work_dir + '/resnet_dprelu_on_cifar10.h5')
+dprelu_weights.to_csv(work_dir + '/avg_bn_dprelu_weights.csv', index=False)
+metrics.to_csv(work_dir + '/bn_dprelu_metrics.csv', index=False)
+base_model.save(work_dir + '/resnet_bn_dprelu_on_cifar10.h5')

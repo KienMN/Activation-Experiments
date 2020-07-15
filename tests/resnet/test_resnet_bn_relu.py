@@ -32,15 +32,6 @@ base_model = tf.keras.applications.ResNet50(
 )
 # base_model.summary()
 
-def normal_layer_factory():
-  return tf.keras.layers.Layer(name='nl')
-
-# Skip batch normalization layer
-base_model = insert_layer_nonseq(base_model, '.*bn', normal_layer_factory, position='replace')
-# Fix possible problems with new model
-base_model.save(work_dir + '/temp1.h5')
-base_model = load_model(work_dir + '/temp1.h5')
-
 print(base_model.summary())
 
 model = tf.keras.Sequential([
@@ -68,5 +59,5 @@ metrics = pd.DataFrame(metrics)
 print(metrics)
 
 # Save results
-metrics.to_csv(work_dir + '/relu_metrics.csv', index=False)
-base_model.save(work_dir + '/resnet_relu_on_cifar10.h5')
+metrics.to_csv(work_dir + '/bn_relu_metrics.csv', index=False)
+base_model.save(work_dir + '/resnet_bn_relu_on_cifar10.h5')

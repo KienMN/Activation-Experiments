@@ -12,16 +12,16 @@ work_dir = os.path.abspath(os.path.dirname(__file__))
 # Load dataset
 (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.cifar10.load_data()
 IMG_SHAPE = [32, 32, 3]
-train_images = train_images.astype('float32')
-train_labels = train_labels.ravel()
-test_images = test_images.astype('float32')
-test_labels = test_labels.ravel()
+train_images = train_images.astype('float32')[:100]
+train_labels = train_labels.ravel()[:100]
+test_images = test_images.astype('float32')[:100]
+test_labels = test_labels.ravel()[:100]
 
 train_images /= 255.
 test_images /= 255.
 
 BATCH_SIZE = 128
-EPOCHS = 200
+EPOCHS = 10
 
 # Prepare model
 base_model = tf.keras.applications.ResNet50(
@@ -35,11 +35,20 @@ base_model = tf.keras.applications.ResNet50(
 def normal_layer_factory():
   return tf.keras.layers.Layer(name='nl')
 
+def prelu_layer_factory():
+  return tf.keras.layers.PReLU(shared_axes=[1, 2], name='prelu')
+
+# Replace ReLU activation layer
+base_model = insert_layer_nonseq(base_model, '.*relu.*', prelu_layer_factory, position='replace')
+# Fix possible problems with new model
+base_model.save(work_dir + '/temp3.h5')
+base_model = load_model(work_dir + '/temp3.h5')
+
 # Skip batch normalization layer
 base_model = insert_layer_nonseq(base_model, '.*bn', normal_layer_factory, position='replace')
 # Fix possible problems with new model
-base_model.save(work_dir + '/temp1.h5')
-base_model = load_model(work_dir + '/temp1.h5')
+base_model.save(work_dir + '/temp3.h5')
+base_model = load_model(work_dir + '/temp3.h5')
 
 print(base_model.summary())
 
@@ -52,8 +61,8 @@ model.summary()
 
 base_learning_rate = 0.0001
 model.compile(optimizer=tf.keras.optimizers.Adam(lr=base_learning_rate),
-                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-                  metrics=['accuracy'])
+              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+              metrics=['accuracy'])
 
 history = model.fit(train_images, train_labels, batch_size=BATCH_SIZE, epochs=EPOCHS, validation_data=(test_images, test_labels))
 
@@ -68,5 +77,5 @@ metrics = pd.DataFrame(metrics)
 print(metrics)
 
 # Save results
-metrics.to_csv(work_dir + '/relu_metrics.csv', index=False)
-base_model.save(work_dir + '/resnet_relu_on_cifar10.h5')
+# metrics.to_csv(work_dir + '/prelu_metrics.csv', index=False)
+# base_model.save(work_dir + '/resnet_prelu_on_cifar10.h5')
