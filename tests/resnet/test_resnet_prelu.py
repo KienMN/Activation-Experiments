@@ -12,16 +12,16 @@ work_dir = os.path.abspath(os.path.dirname(__file__))
 # Load dataset
 (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.cifar10.load_data()
 IMG_SHAPE = [32, 32, 3]
-train_images = train_images.astype('float32')[:100]
-train_labels = train_labels.ravel()[:100]
-test_images = test_images.astype('float32')[:100]
-test_labels = test_labels.ravel()[:100]
+train_images = train_images.astype('float32')
+train_labels = train_labels.ravel()
+test_images = test_images.astype('float32')
+test_labels = test_labels.ravel()
 
 train_images /= 255.
 test_images /= 255.
 
 BATCH_SIZE = 128
-EPOCHS = 10
+EPOCHS = 200
 
 # Prepare model
 base_model = tf.keras.applications.ResNet50(
@@ -77,5 +77,5 @@ metrics = pd.DataFrame(metrics)
 print(metrics)
 
 # Save results
-# metrics.to_csv(work_dir + '/prelu_metrics.csv', index=False)
-# base_model.save(work_dir + '/resnet_prelu_on_cifar10.h5')
+metrics.to_csv(work_dir + '/prelu_metrics.csv', index=False)
+base_model.save(work_dir + '/resnet_prelu_on_cifar10.h5')
