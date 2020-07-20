@@ -31,10 +31,22 @@ if args.dataset == 'cifar10':
   IMG_SHAPE = [32, 32, 3]
   N_CLASSES = 10
   (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.cifar10.load_data()
-  train_images = train_images.astype('float32')[:100]
-  train_labels = train_labels.ravel()[:100]
-  test_images = test_images.astype('float32')[:100]
-  test_labels = test_labels.ravel()[:100]
+  train_images = train_images.astype('float32')
+  train_labels = train_labels.ravel()
+  test_images = test_images.astype('float32')
+  test_labels = test_labels.ravel()
+
+  train_images /= 255.
+  test_images /= 255.
+  
+elif args.dataset == 'cifar10':
+  IMG_SHAPE = [32, 32, 3]
+  N_CLASSES = 100
+  (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.cifar10.load_data()
+  train_images = train_images.astype('float32')
+  train_labels = train_labels.ravel()
+  test_images = test_images.astype('float32')
+  test_labels = test_labels.ravel()
 
   train_images /= 255.
   test_images /= 255.
