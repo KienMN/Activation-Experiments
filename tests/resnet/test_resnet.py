@@ -11,7 +11,7 @@ from tensorflow.keras.models import load_model
 parser = ArgumentParser()
 parser.add_argument('--activation', '-a', type=str, choices=['relu', 'prelu', 'dprelu'], help='Type of activation', required=True)
 parser.add_argument('--batch_normalization', '-bn', type=bool, default=False, help='Whether to apply batch normalization or not')
-parser.add_argument('--dataset', '-d', type=str, help='Name of dataset', choices=['cifar10'], default='cifar10')
+parser.add_argument('--dataset', '-d', type=str, help='Name of dataset', choices=['cifar10', 'cifar100'], default='cifar10')
 parser.add_argument('--epochs', '-e', type=int, help='Number of epochs', default=50)
 parser.add_argument('--batch_size', '-b', type=int, help='Batch size', default=32)
 parser.add_argument('--optimizer', '-op', type=str, choices=['adam'], default='adam', help='Name of optimizer')
@@ -39,10 +39,10 @@ if args.dataset == 'cifar10':
   train_images /= 255.
   test_images /= 255.
   
-elif args.dataset == 'cifar10':
+elif args.dataset == 'cifar100':
   IMG_SHAPE = [32, 32, 3]
   N_CLASSES = 100
-  (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.cifar10.load_data()
+  (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.cifar100.load_data()
   train_images = train_images.astype('float32')
   train_labels = train_labels.ravel()
   test_images = test_images.astype('float32')
@@ -103,7 +103,7 @@ print(base_model.summary())
 
 model = tf.keras.Sequential([
   base_model,
-  tf.keras.layers.Dense(N_CLASSES, activation='softmax')
+  tf.keras.layers.Dense(N_CLASSES)
 ])
 
 print(model.summary())
@@ -118,7 +118,7 @@ if args.optimizer == 'adam':
   optimizer = tf.keras.optimizers.Adam(lr=LEARNING_RATE)
 
 # Callbacks
-model_filepath = work_dir+'/weights/'+model_name+'.{epoch:02d}-{val_accuracy:.2f}.hdf5'
+model_filepath = work_dir+'/weights/'+model_name+'.{epoch:02d}-{val_accuracy:.4f}.hdf5'
 callback = tf.keras.callbacks.ModelCheckpoint(
   filepath=model_filepath,
   monitor='val_accuracy',
