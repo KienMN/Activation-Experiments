@@ -1,3 +1,6 @@
-from .activation_layers import DPReLU
+from .activation_layers import DPReLU, FReLU
 
-__all__ = ['DPReLU']
+__all__ = [
+  'DPReLU',
+  'FReLU'
+]

@@ -4,12 +4,12 @@ import os
 import tensorflow as tf
 import pandas as pd
 from argparse import ArgumentParser
-from activation_layers import DPReLU
+from activation_layers import DPReLU, FReLU
 from activation_layers.utils import insert_layer_nonseq
 from tensorflow.keras.models import load_model
 
 parser = ArgumentParser()
-parser.add_argument('--activation', '-a', type=str, choices=['relu', 'prelu', 'dprelu'], help='Type of activation', required=True)
+parser.add_argument('--activation', '-a', type=str, choices=['relu', 'prelu', 'dprelu', 'frelu'], help='Type of activation', required=True)
 parser.add_argument('--batch_normalization', '-bn', type=bool, default=False, help='Whether to apply batch normalization or not')
 parser.add_argument('--dataset', '-d', type=str, help='Name of dataset', choices=['cifar10', 'cifar100'], default='cifar10')
 parser.add_argument('--epochs', '-e', type=int, help='Number of epochs', default=50)
@@ -53,10 +53,13 @@ elif args.dataset == 'cifar100':
 
 # Load model
 def dprelu_layer_factory():
-  return DPReLU(shared_axes=[1, 2], name='dprelu')
+  return DPReLU(shared_axes=[1, 2, 3], name='dprelu')
 
 def prelu_layer_factory():
-  return tf.keras.layers.PReLU(shared_axes=[1, 2], name='prelu')
+  return tf.keras.layers.PReLU(shared_axes=[1, 2, 3], name='prelu')
+
+def frelu_layer_factory():
+  return FReLU(shared_axes=[1, 2, 3], name='frelu')
 
 def normal_layer_factory():
   return tf.keras.layers.Layer(name='nl')
@@ -88,6 +91,17 @@ elif args.activation == 'prelu':
   base_model = load_model(work_dir + '/temp.h5', custom_objects={'DPReLU': DPReLU})
 
   base_model = insert_layer_nonseq(base_model, '.*out.*', prelu_layer_factory, position='replace')
+  # Fix possible problems with new model
+  base_model.save(work_dir + '/temp.h5')
+  base_model = load_model(work_dir + '/temp.h5', custom_objects={'DPReLU': DPReLU})
+
+elif args.activation == 'frelu':
+  base_model = insert_layer_nonseq(base_model, '.*relu.*', frelu_layer_factory, position='replace')
+  # Fix possible problems with new model
+  base_model.save(work_dir + '/temp.h5')
+  base_model = load_model(work_dir + '/temp.h5', custom_objects={'DPReLU': DPReLU})
+
+  base_model = insert_layer_nonseq(base_model, '.*out.*', frelu_layer_factory, position='replace')
   # Fix possible problems with new model
   base_model.save(work_dir + '/temp.h5')
   base_model = load_model(work_dir + '/temp.h5', custom_objects={'DPReLU': DPReLU})

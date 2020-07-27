@@ -121,3 +121,63 @@ class DPReLU(Layer):
   @tf_utils.shape_type_conversion
   def compute_output_shape(self, input_shape):
     return input_shape
+
+class FReLU(Layer):
+  def __init__(self,
+               bias_initializer='zeros',
+               bias_regularizer=None,
+               bias_constraint=None,
+               shared_axes=None, **kwargs):
+    super(FReLU, self).__init__(**kwargs)
+
+    self.supports_masking = True
+    
+    self.bias_initializer = initializers.get(bias_initializer)
+    self.bias_regularizer = regularizers.get(bias_regularizer)
+    self.bias_constraint = constraints.get(bias_constraint)
+
+    if shared_axes is None:
+      self.shared_axes = None
+    elif not isinstance(shared_axes, (list, tuple)):
+      self.shared_axes = [shared_axes]
+    else:
+      self.shared_axes = list(shared_axes)
+
+  def build(self, input_shape):
+    param_shape = list(input_shape[1:])
+    if self.shared_axes is not None:
+      for i in self.shared_axes:
+        param_shape[i - 1] = 1
+    
+    self.bias = self.add_weight(
+      shape=param_shape,
+      name='bias',
+      initializer=self.bias_initializer,
+      regularizer=self.bias_regularizer,
+      constraint=self.bias_constraint)
+
+    # Set input spec
+    axes = {}
+    if self.shared_axes:
+      for i in range(1, len(input_shape)):
+        if i not in self.shared_axes:
+          axes[i] = input_shape[i]
+    self.input_spec = InputSpec(ndim=len(input_shape), axes=axes)
+    self.built = True
+
+  def call(self, inputs):
+    return K.relu(inputs) + self.bias
+
+  def get_config(self):
+    config = {
+      'bias_initializer': initializers.serialize(self.bias_initializer),
+      'bias_regularizer': regularizers.serialize(self.bias_regularizer),
+      'bias_constraint': constraints.serialize(self.bias_constraint),
+      'shared_axes': self.shared_axes
+    }
+    base_config = super(FReLU, self).get_config()
+    return dict(list(base_config.items()) + list(config.items()))
+
+  @tf_utils.shape_type_conversion
+  def compute_output_shape(self, input_shape):
+    return input_shape
