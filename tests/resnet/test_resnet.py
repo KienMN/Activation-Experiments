@@ -99,19 +99,19 @@ elif args.activation == 'frelu':
   base_model = insert_layer_nonseq(base_model, '.*relu.*', frelu_layer_factory, position='replace')
   # Fix possible problems with new model
   base_model.save(work_dir + '/temp.h5')
-  base_model = load_model(work_dir + '/temp.h5', custom_objects={'DPReLU': DPReLU})
+  base_model = load_model(work_dir + '/temp.h5', custom_objects={'FReLU': FReLU})
 
   base_model = insert_layer_nonseq(base_model, '.*out.*', frelu_layer_factory, position='replace')
   # Fix possible problems with new model
   base_model.save(work_dir + '/temp.h5')
-  base_model = load_model(work_dir + '/temp.h5', custom_objects={'DPReLU': DPReLU})
+  base_model = load_model(work_dir + '/temp.h5', custom_objects={'FReLU': FReLU})
 
 # Skip batch normalization layer
 if not args.batch_normalization:
   base_model = insert_layer_nonseq(base_model, '.*bn', normal_layer_factory, position='replace')
   # Fix possible problems with new model
   base_model.save(work_dir + '/temp.h5')
-  base_model = load_model(work_dir + '/temp.h5', custom_objects={'DPReLU': DPReLU})
+  base_model = load_model(work_dir + '/temp.h5', custom_objects={'DPReLU': DPReLU, 'FReLU': FReLU})
 
 print(base_model.summary())
 

@@ -28,6 +28,9 @@ def insert_layer_nonseq(model, layer_regex, insert_layer_factory, insert_layer_n
   model: instance of tf.keras.Model
     Model after being modified.
   """
+  # This function follows the answer in:
+  # https://stackoverflow.com/questions/49492255/how-to-replace-or-insert-intermediate-layer-in-keras-model
+
   # Auxiliary dictionary to describe the network graph
   network_dict = {'input_layers_of': {}, 'new_output_tensor_of': {}}
 
