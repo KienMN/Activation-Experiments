@@ -5,6 +5,7 @@ import tensorflow as tf
 import pandas as pd
 from argparse import ArgumentParser
 from activation_layers import DPReLU, FReLU
+from activation_layers import modified_he_normal, dprelu_normal
 from activation_layers.utils import insert_layer_nonseq
 from tensorflow.keras.models import load_model
 import matplotlib.pyplot as plt
@@ -77,7 +78,7 @@ parser.add_argument(
 parser.add_argument(
   '--weight_initialization', '-wi',
   type=str,
-  choices=['xavier', 'he'],
+  choices=['xavier', 'he', 'modified_he', 'dprelu'],
   default='xavier'
 )
 
@@ -106,9 +107,10 @@ print('Arguments', args)
 
 # Directory
 work_dir = os.path.abspath(os.path.dirname(__file__))
-model_name = 'resnet50_{}_on_{}'.format(
+model_name = 'resnet50_{}_on_{}_{}_init'.format(
   'bn_' + args.activation if args.batch_normalization else args.activation,
-  args.dataset
+  args.dataset,
+  args.weight_initialization
 )
 
 if args.activation == 'dprelu':
@@ -242,8 +244,14 @@ if args.weight_initialization == 'xavier':
   initializer = tf.keras.initializers.GlorotNormal()
 elif args.weight_initialization == 'he':
   initializer = tf.keras.initializers.he_normal()
+elif args.weight_initialization == 'modified_he':
+  initializer = modified_he_normal()
+elif (args.weight_initialization == 'dprelu') and (args.alpha is not None) and (args.beta is not None):
+  initializer = dprelu_normal(alpha=args.alpha, beta=args.beta)
+else:
+  raise ValueError('No valid weight initializer')
 
-# x = base_model.layers[2].weights[0].numpy().reshape(-1,1)
+x = base_model.layers[2].weights[0].numpy().reshape(-1,1)
 # print(x)
 
 # Re-initialize weights
@@ -269,15 +277,15 @@ model = tf.keras.Sequential([
 ])
 
 # Check the histogram of weight intialization
-# y = model.layers[0].layers[2].weights[0].numpy().reshape(-1,1)
+y = model.layers[0].layers[2].weights[0].numpy().reshape(-1,1)
 # print(y)
 
-# fig, ax = plt.subplots(1, 2)
-# ax[0].hist(x)
-# ax[0].set_title('Before')
-# ax[1].hist(y)
-# ax[1].set_title('After')
-# plt.show()
+fig, ax = plt.subplots(1, 2)
+ax[0].hist(x)
+ax[0].set_title('Before')
+ax[1].hist(y)
+ax[1].set_title('After')
+plt.show()
 
 # print(model.summary())
 
