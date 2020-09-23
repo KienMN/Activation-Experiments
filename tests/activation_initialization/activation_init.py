@@ -5,7 +5,7 @@ import tensorflow as tf
 import pandas as pd
 from argparse import ArgumentParser
 from activation_layers import DPReLU, FReLU
-from activation_layers import modified_he_normal, dprelu_normal
+from activation_layers import modified_he_normal, dprelu_normal, prelu_normal
 from activation_layers.utils import insert_layer_nonseq
 from tensorflow.keras.models import load_model
 import matplotlib.pyplot as plt
@@ -78,7 +78,7 @@ parser.add_argument(
 parser.add_argument(
   '--weight_initialization', '-wi',
   type=str,
-  choices=['xavier', 'he', 'modified_he', 'dprelu'],
+  choices=['xavier', 'he', 'modified_he', 'dprelu', 'prelu'],
   default='xavier'
 )
 
@@ -176,7 +176,8 @@ def dprelu_layer_factory():
 def prelu_layer_factory():
   return tf.keras.layers.PReLU(
     shared_axes=[1, 2, 3],
-    name='prelu'
+    name='prelu',
+    alpha_initializer=alpha_initializer
   )
 
 def frelu_layer_factory():
@@ -248,10 +249,12 @@ elif args.weight_initialization == 'modified_he':
   initializer = modified_he_normal()
 elif (args.weight_initialization == 'dprelu') and (args.alpha is not None) and (args.beta is not None):
   initializer = dprelu_normal(alpha=args.alpha, beta=args.beta)
+elif (args.weight_initialization == 'dprelu') and (args.alpha is not None):
+  initializer = prelu_normal(alpha=args.alpha)
 else:
   raise ValueError('No valid weight initializer')
 
-x = base_model.layers[2].weights[0].numpy().reshape(-1,1)
+# x = base_model.layers[2].weights[0].numpy().reshape(-1,1)
 # print(x)
 
 # Re-initialize weights
@@ -277,15 +280,15 @@ model = tf.keras.Sequential([
 ])
 
 # Check the histogram of weight intialization
-y = model.layers[0].layers[2].weights[0].numpy().reshape(-1,1)
+# y = model.layers[0].layers[2].weights[0].numpy().reshape(-1,1)
 # print(y)
 
-fig, ax = plt.subplots(1, 2)
-ax[0].hist(x)
-ax[0].set_title('Before')
-ax[1].hist(y)
-ax[1].set_title('After')
-plt.show()
+# fig, ax = plt.subplots(1, 2)
+# ax[0].hist(x)
+# ax[0].set_title('Before')
+# ax[1].hist(y)
+# ax[1].set_title('After')
+# plt.show()
 
 # print(model.summary())
 
