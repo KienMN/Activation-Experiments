@@ -311,7 +311,17 @@ callback = tf.keras.callbacks.ModelCheckpoint(
   mode='max',
   save_best_only=True
 )
-callbacks = [callback]
+
+# Learning rate scheduler
+def scheduler(epoch, lr):
+  if epoch == 10:
+    return lr * 0.1
+  else:
+    return lr
+
+lr_callback = tf.keras.callbacks.LearningRateScheduler(scheduler)
+
+callbacks = [callback, lr_callback]
 
 # Compile and train the model
 model.compile(
