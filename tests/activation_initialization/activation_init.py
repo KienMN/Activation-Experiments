@@ -5,7 +5,7 @@ import tensorflow as tf
 import pandas as pd
 from argparse import ArgumentParser
 from activation_layers import DPReLU, FReLU
-from activation_layers import modified_he_normal, dprelu_normal, prelu_normal
+from activation_layers import modified_he_normal, dprelu_normal, prelu_normal, xavier_untruncated_normal
 from activation_layers.utils import insert_layer_nonseq
 from tensorflow.keras.models import load_model
 import matplotlib.pyplot as plt
@@ -71,14 +71,14 @@ parser.add_argument(
 parser.add_argument(
   '--learning_rate', '-lr',
   type=float,
-  default=0.0001,
+  default=0.001,
   help='Learning rate'
 )
 
 parser.add_argument(
   '--weight_initialization', '-wi',
   type=str,
-  choices=['xavier', 'he', 'modified_he', 'dprelu', 'prelu'],
+  choices=['xavier', 'he', 'modified_he', 'dprelu', 'prelu', 'xavier_untruncated'],
   default='xavier'
 )
 
@@ -243,13 +243,15 @@ if not args.batch_normalization:
 # Weight initializer
 if args.weight_initialization == 'xavier':
   initializer = tf.keras.initializers.GlorotNormal()
+elif args.weight_initialization == 'xavier_untruncated':
+  initializer = xavier_untruncated_normal()
 elif args.weight_initialization == 'he':
   initializer = tf.keras.initializers.he_normal()
 elif args.weight_initialization == 'modified_he':
   initializer = modified_he_normal()
 elif (args.weight_initialization == 'dprelu') and (args.alpha is not None) and (args.beta is not None):
   initializer = dprelu_normal(alpha=args.alpha, beta=args.beta)
-elif (args.weight_initialization == 'dprelu') and (args.alpha is not None):
+elif (args.weight_initialization == 'prelu') and (args.alpha is not None):
   initializer = prelu_normal(alpha=args.alpha)
 else:
   raise ValueError('No valid weight initializer')
