@@ -15,7 +15,7 @@ def get_parser():
   parser.add_argument('--activation', type=str, choices=['relu', 'prelu', 'frelu', 'bn_relu', 'dprelu'], required=True, help="Activation")
 
   # Dataset
-  parser.add_argument('--dataset', type=str, choices=['mnist'], default='mnist', help='Name of dataset')
+  parser.add_argument('--dataset', type=str, choices=['mnist', 'cifar10', 'cifar100'], default='mnist', help='Name of dataset')
 
   # Directory to save results
   parser.add_argument('--weights_dir', type=str, default=None, help='Directory to save weights')
@@ -35,14 +35,26 @@ def run(args):
   
   # Prepare the dataset
   if args.dataset == 'mnist':
-    input_shape = [28, 28, 1]
-    (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.mnist.load_data()
+    IMG_SHAPE = [28, 28, 1]
+    (train_images, _), (test_images, _) = tf.keras.datasets.mnist.load_data()
 
     train_images = train_images.reshape([-1, 28, 28, 1]).astype('float32')
     test_images = test_images.reshape([-1, 28, 28, 1]).astype('float32')
 
-    train_images /= 255.
-    test_images /= 255.
+  elif args.dataset == 'cifar10':
+    IMG_SHAPE = [32, 32, 3]
+    (train_images, _), (test_images, _) = tf.keras.datasets.cifar10.load_data()
+    train_images = train_images.astype('float32')
+    test_images = test_images.astype('float32')
+  
+  elif args.dataset == 'cifar100':
+    IMG_SHAPE = [32, 32, 3]
+    (train_images, _), (test_images, _) = tf.keras.datasets.cifar100.load_data()
+    train_images = train_images.astype('float32')
+    test_images = test_images.astype('float32')
+
+  train_images /= 255.
+  test_images /= 255.
 
   # Training parameters
   latent_dim = args.latent_dim
@@ -53,16 +65,23 @@ def run(args):
   # Model
   model_name = 'Autoencoder_with_{}_on_{}'.format(args.activation, args.dataset)
   print(model_name)
-  if args.activation == 'relu':
-    model = AutoEncoderWithReLU(input_dims=input_shape, latent_dim=latent_dim)
-  elif args.activation == 'prelu':
-    model = AutoEncoderWithPReLU(input_dims=input_shape, latent_dim=latent_dim)
-  elif args.activation == 'frelu':
-    model = AutoEncoderWithFReLU(input_dims=input_shape, latent_dim=latent_dim)
-  elif args.activation == 'bn_relu':
-    model = AutoEncoderWithBatchNormReLU(input_dims=input_shape, latent_dim=latent_dim)
-  elif args.activation == 'dprelu':
-    model = AutoEncoderWithDPReLU(input_dims=input_shape, latent_dim=latent_dim)
+  if args.dataset == 'mnist':
+    # if args.activation == 'relu':
+    #   model = AutoEncoderWithReLU(input_dims=IMG_SHAPE, latent_dim=latent_dim)
+    # elif args.activation == 'prelu':
+    #   model = AutoEncoderWithPReLU(input_dims=IMG_SHAPE, latent_dim=latent_dim)
+    # elif args.activation == 'frelu':
+    #   model = AutoEncoderWithFReLU(input_dims=IMG_SHAPE, latent_dim=latent_dim)
+    # elif args.activation == 'bn_relu':
+    #   model = AutoEncoderWithBatchNormReLU(input_dims=IMG_SHAPE, latent_dim=latent_dim)
+    # elif args.activation == 'dprelu':
+    #   model = AutoEncoderWithDPReLU(input_dims=IMG_SHAPE, latent_dim=latent_dim)
+    if args.activation == 'bn_relu':
+      model = AutoEncoderWithBatchNormReLU(input_dims=IMG_SHAPE, latent_dim=latent_dim)
+    else:
+      model = MnistAutoencoder(input_dims=IMG_SHAPE, latent_dim=latent_dim, activation=args.activation)
+  elif args.dataset == 'cifar10' or args.dataset == 'cifar100':
+    model = Cifar10ConvAutoencoder(input_dims=IMG_SHAPE, latent_dim=latent_dim, activation=args.activation)
   
   model.compile(loss='mse',
                 optimizer=tf.keras.optimizers.Adam(learning_rate))
