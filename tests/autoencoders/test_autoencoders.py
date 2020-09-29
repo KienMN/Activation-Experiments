@@ -12,20 +12,58 @@ def get_parser():
   parser = ArgumentParser(description='Autoencoder experiments')
   
   # Activation functions
-  parser.add_argument('--activation', type=str, choices=['relu', 'prelu', 'frelu', 'bn_relu', 'dprelu'], required=True, help="Activation")
+  parser.add_argument(
+    '--activation',
+    type=str,
+    choices=['relu', 'prelu', 'frelu', 'bn_relu', 'dprelu'],
+    required=True,
+    help="Activation")
 
   # Dataset
-  parser.add_argument('--dataset', type=str, choices=['mnist', 'cifar10', 'cifar100'], default='mnist', help='Name of dataset')
+  parser.add_argument(
+    '--dataset',
+    type=str,
+    choices=['mnist', 'cifar10', 'cifar100'],
+    default='mnist',
+    help='Name of dataset')
 
   # Directory to save results
-  parser.add_argument('--weights_dir', type=str, default=None, help='Directory to save weights')
-  parser.add_argument('--losses_dir', type=str, default=None, help='Directory to save losses')
+  parser.add_argument(
+    '--weights_dir',
+    type=str,
+    default=None,
+    help='Directory to save weights')
+
+  parser.add_argument(
+    '--losses_dir',
+    type=str,
+    default=None,
+    help='Directory to save losses')
 
   # Training parameters
-  parser.add_argument('--latent_dim', type=int, default=30, help='Number of dimensions of latent space')
-  parser.add_argument('--batch_size', type=int, default=128, help='Batch size')
-  parser.add_argument('--n_epochs', type=int, default=50, help='Number of epochs')
-  parser.add_argument('--learning_rate', type=float, default=1e-4, help='Learning rate')
+  parser.add_argument(
+    '--latent_dim',
+    type=int,
+    default=30,
+    help='Number of dimensions of latent space')
+  
+  parser.add_argument(
+    '--batch_size',
+    type=int,
+    default=128,
+    help='Batch size')
+
+  parser.add_argument(
+    '--n_epochs',
+    type=int,
+    default=50,
+    help='Number of epochs')
+
+  parser.add_argument(
+    '--learning_rate',
+    type=float,
+    default=1e-4,
+    help='Learning rate')
 
   return parser
 
@@ -77,23 +115,34 @@ def run(args):
     # elif args.activation == 'dprelu':
     #   model = AutoEncoderWithDPReLU(input_dims=IMG_SHAPE, latent_dim=latent_dim)
     if args.activation == 'bn_relu':
-      model = AutoEncoderWithBatchNormReLU(input_dims=IMG_SHAPE, latent_dim=latent_dim)
+      model = AutoEncoderWithBatchNormReLU(
+        input_dims=IMG_SHAPE,
+        latent_dim=latent_dim)
     else:
-      model = MnistAutoencoder(input_dims=IMG_SHAPE, latent_dim=latent_dim, activation=args.activation)
+      model = MnistAutoencoder(
+        input_dims=IMG_SHAPE,
+        latent_dim=latent_dim,
+        activation=args.activation)
   elif args.dataset == 'cifar10' or args.dataset == 'cifar100':
-    model = Cifar10ConvAutoencoder(input_dims=IMG_SHAPE, latent_dim=latent_dim, activation=args.activation)
+    model = Cifar10ConvAutoencoder(
+      input_dims=IMG_SHAPE,
+      latent_dim=latent_dim,
+      hidden_dim=1024,
+      activation=args.activation)
   
-  model.compile(loss='mse',
-                optimizer=tf.keras.optimizers.Adam(learning_rate))
+  model.compile(
+    loss='mse',
+    optimizer=tf.keras.optimizers.Adam(learning_rate))
   
   print(model.encoder.summary())
   print(model.decoder.summary())
 
-  history = model.fit(x=train_images,
-                      y=train_images,
-                      batch_size=batch_size,
-                      epochs=epochs,
-                      validation_data=(test_images, test_images))
+  history = model.fit(
+    x=train_images,
+    y=train_images,
+    batch_size=batch_size,
+    epochs=epochs,
+    validation_data=(test_images, test_images))
 
   # Save the loss
   filename = model_name + '_loss.csv'

@@ -211,7 +211,7 @@ class MnistAutoencoder(BaseAutoEncoder):
     ])
 
 class Cifar10ConvAutoencoder(BaseAutoEncoder):
-  def __init__(self, input_dims, latent_dim, hidden_dim=100, activation='relu'):
+  def __init__(self, input_dims, latent_dim, hidden_dim=1024, activation='relu'):
     super(Cifar10ConvAutoencoder, self).__init__()
 
     self.encoder = tf.keras.Sequential([
