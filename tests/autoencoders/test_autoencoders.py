@@ -2,8 +2,10 @@ import os
 import time
 import json
 import pandas as pd
+import matplotlib.pyplot as plt
 from argparse import ArgumentParser
 from autoencoder_models import *
+from activation_layers import modified_he_normal, dprelu_normal, prelu_normal, xavier_untruncated_normal
 
 def get_parser():
   """
@@ -18,6 +20,18 @@ def get_parser():
     choices=['relu', 'prelu', 'frelu', 'bn_relu', 'dprelu'],
     required=True,
     help="Activation")
+
+  parser.add_argument(
+    '--alpha',
+    type=float,
+    default=None
+  )
+
+  parser.add_argument(
+    '--beta',
+    type=float,
+    default=None
+  )
 
   # Dataset
   parser.add_argument(
@@ -62,8 +76,16 @@ def get_parser():
   parser.add_argument(
     '--learning_rate',
     type=float,
-    default=1e-4,
+    default=1e-3,
     help='Learning rate')
+
+  # Weight initialization
+  parser.add_argument(
+    '--weight_initialization', '-wi',
+    type=str,
+    choices=['xavier', 'he', 'modified_he', 'dprelu', 'prelu', 'xavier_untruncated'],
+    default='xavier'
+  )
 
   return parser
 
@@ -101,19 +123,21 @@ def run(args):
   learning_rate = args.learning_rate
 
   # Model
-  model_name = 'Autoencoder_with_{}_on_{}'.format(args.activation, args.dataset)
+  # model_name = 'Autoencoder_with_{}_on_{}'.format(args.activation, args.dataset)
+  model_name = 'autoencoder_{}_on_{}_{}_init'.format(
+    args.activation,
+    args.dataset,
+    args.weight_initialization
+  )
+
+  if args.activation == 'dprelu':
+    model_name += '_alpha_{}_beta_{}'.format(args.alpha, args.beta)
+  elif args.activation == 'prelu':
+    model_name += '_alpha_{}'.format(args.alpha)
+
   print(model_name)
+  
   if args.dataset == 'mnist':
-    # if args.activation == 'relu':
-    #   model = AutoEncoderWithReLU(input_dims=IMG_SHAPE, latent_dim=latent_dim)
-    # elif args.activation == 'prelu':
-    #   model = AutoEncoderWithPReLU(input_dims=IMG_SHAPE, latent_dim=latent_dim)
-    # elif args.activation == 'frelu':
-    #   model = AutoEncoderWithFReLU(input_dims=IMG_SHAPE, latent_dim=latent_dim)
-    # elif args.activation == 'bn_relu':
-    #   model = AutoEncoderWithBatchNormReLU(input_dims=IMG_SHAPE, latent_dim=latent_dim)
-    # elif args.activation == 'dprelu':
-    #   model = AutoEncoderWithDPReLU(input_dims=IMG_SHAPE, latent_dim=latent_dim)
     if args.activation == 'bn_relu':
       model = AutoEncoderWithBatchNormReLU(
         input_dims=IMG_SHAPE,
@@ -122,20 +146,42 @@ def run(args):
       model = MnistAutoencoder(
         input_dims=IMG_SHAPE,
         latent_dim=latent_dim,
-        activation=args.activation)
+        activation=args.activation,
+        alpha=args.alpha,
+        beta=args.beta,
+        shared_axes=None,
+        weight_initialization=args.weight_initialization)
   elif args.dataset == 'cifar10' or args.dataset == 'cifar100':
     model = Cifar10ConvAutoencoder(
       input_dims=IMG_SHAPE,
       latent_dim=latent_dim,
       hidden_dim=1024,
-      activation=args.activation)
-  
+      activation=args.activation,
+      alpha=args.alpha,
+      beta=args.beta,
+      weight_initialization=args.weight_initialization)
+
+  # Check the value of initialized-parameters of DPReLU
+  # for layer in model.encoder.layers:
+  #   # print(layer.name)
+  #   if 'dp_re_lu' in layer.name:
+  #     print(layer.weights)
+
+  # Check the histogram of weight intialization
+  # y = model.encoder.layers[0].weights[0].numpy().reshape(-1,1)
+  # print(y)
+
+  # fig, ax = plt.subplots(1, 1)
+  # ax.hist(y)
+  # ax.set_title('After')
+  # plt.show()
+
   model.compile(
     loss='mse',
     optimizer=tf.keras.optimizers.Adam(learning_rate))
   
-  print(model.encoder.summary())
-  print(model.decoder.summary())
+  # print(model.encoder.summary())
+  # print(model.decoder.summary())
 
   history = model.fit(
     x=train_images,

@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from activation_layers import DPReLU, FReLU
+from activation_layers import modified_he_normal, dprelu_normal, prelu_normal, xavier_untruncated_normal
 
 class BaseAutoEncoder(tf.keras.Model):
   def __init__(self, *args, **kwargs):
@@ -19,50 +20,6 @@ class BaseAutoEncoder(tf.keras.Model):
       probs = tf.nn.sigmoid(reconstructed_input)
       return probs
     return reconstructed_input
-
-# class AutoEncoderWithReLU(BaseAutoEncoder):
-#   def  __init__(self, input_dims, latent_dim):
-#     super(AutoEncoderWithReLU, self).__init__()
-
-#     self.encoder = tf.keras.Sequential([
-#       tf.keras.layers.InputLayer(input_shape=input_dims),
-#       tf.keras.layers.Flatten(),
-#       tf.keras.layers.Dense(1000, activation='relu'),
-#       tf.keras.layers.Dense(500, activation='relu'),
-#       tf.keras.layers.Dense(250, activation='relu'),
-#       tf.keras.layers.Dense(latent_dim)
-#     ])
-
-#     self.decoder = tf.keras.Sequential([
-#       tf.keras.layers.InputLayer(input_shape=(latent_dim,)),
-#       tf.keras.layers.Dense(250, activation='relu'),
-#       tf.keras.layers.Dense(500, activation='relu'),
-#       tf.keras.layers.Dense(1000, activation='relu'),
-#       tf.keras.layers.Dense(np.prod(input_dims)),
-#       tf.keras.layers.Reshape(input_dims)
-#     ])
-
-# class AutoEncoderWithELU(BaseAutoEncoder):
-#   def  __init__(self, input_dims, latent_dim):
-#     super(AutoEncoderWithELU, self).__init__()
-
-#     self.encoder = tf.keras.Sequential([
-#       tf.keras.layers.InputLayer(input_shape=input_dims),
-#       tf.keras.layers.Flatten(),
-#       tf.keras.layers.Dense(1000, activation='elu'),
-#       tf.keras.layers.Dense(500, activation='elu'),
-#       tf.keras.layers.Dense(250, activation='elu'),
-#       tf.keras.layers.Dense(latent_dim)
-#     ])
-
-#     self.decoder = tf.keras.Sequential([
-#       tf.keras.layers.InputLayer(input_shape=(latent_dim,)),
-#       tf.keras.layers.Dense(250, activation='elu'),
-#       tf.keras.layers.Dense(500, activation='elu'),
-#       tf.keras.layers.Dense(1000, activation='elu'),
-#       tf.keras.layers.Dense(np.prod(input_dims)),
-#       tf.keras.layers.Reshape(input_dims)
-#     ])
 
 class AutoEncoderWithBatchNormReLU(BaseAutoEncoder):
   def  __init__(self, input_dims, latent_dim):
@@ -98,157 +55,212 @@ class AutoEncoderWithBatchNormReLU(BaseAutoEncoder):
       tf.keras.layers.Reshape(input_dims)
     ])
 
-# class AutoEncoderWithPReLU(BaseAutoEncoder):
-#   def  __init__(self, input_dims, latent_dim, shared_axes=None):
-#     super(AutoEncoderWithPReLU, self).__init__()
-
-#     self.encoder = tf.keras.Sequential([
-#       tf.keras.layers.InputLayer(input_shape=input_dims),
-#       tf.keras.layers.Flatten(),
-#       tf.keras.layers.Dense(1000),
-#       tf.keras.layers.PReLU(shared_axes=shared_axes),
-#       tf.keras.layers.Dense(500),
-#       tf.keras.layers.PReLU(shared_axes=shared_axes),
-#       tf.keras.layers.Dense(250),
-#       tf.keras.layers.PReLU(shared_axes=shared_axes),
-#       tf.keras.layers.Dense(latent_dim)
-#     ])
-
-#     self.decoder = tf.keras.Sequential([
-#       tf.keras.layers.InputLayer(input_shape=(latent_dim,)),
-#       tf.keras.layers.Dense(250),
-#       tf.keras.layers.PReLU(shared_axes=shared_axes),
-#       tf.keras.layers.Dense(500),
-#       tf.keras.layers.PReLU(shared_axes=shared_axes),
-#       tf.keras.layers.Dense(1000),
-#       tf.keras.layers.PReLU(shared_axes=shared_axes),
-#       tf.keras.layers.Dense(np.prod(input_dims)),
-#       tf.keras.layers.Reshape(input_dims)
-#     ])
-
-# class AutoEncoderWithFReLU(BaseAutoEncoder):
-#   def  __init__(self, input_dims, latent_dim, shared_axes=None):
-#     super(AutoEncoderWithFReLU, self).__init__()
-
-#     self.encoder = tf.keras.Sequential([
-#       tf.keras.layers.InputLayer(input_shape=input_dims),
-#       tf.keras.layers.Flatten(),
-#       tf.keras.layers.Dense(1000),
-#       FReLU(shared_axes=shared_axes),
-#       tf.keras.layers.Dense(500),
-#       FReLU(shared_axes=shared_axes),
-#       tf.keras.layers.Dense(250),
-#       FReLU(shared_axes=shared_axes),
-#       tf.keras.layers.Dense(latent_dim)
-#     ])
-
-#     self.decoder = tf.keras.Sequential([
-#       tf.keras.layers.InputLayer(input_shape=(latent_dim,)),
-#       tf.keras.layers.Dense(250),
-#       FReLU(shared_axes=shared_axes),
-#       tf.keras.layers.Dense(500),
-#       FReLU(shared_axes=shared_axes),
-#       tf.keras.layers.Dense(1000),
-#       FReLU(shared_axes=shared_axes),
-#       tf.keras.layers.Dense(np.prod(input_dims)),
-#       tf.keras.layers.Reshape(input_dims)
-#     ])
-
-# class AutoEncoderWithDPReLU(BaseAutoEncoder):
-#   def  __init__(self, input_dims, latent_dim, shared_axes=None):
-#     super(AutoEncoderWithDPReLU, self).__init__()
-
-#     self.encoder = tf.keras.Sequential([
-#       tf.keras.layers.InputLayer(input_shape=input_dims),
-#       tf.keras.layers.Flatten(),
-#       tf.keras.layers.Dense(1000),
-#       DPReLU(shared_axes=shared_axes),
-#       tf.keras.layers.Dense(500),
-#       DPReLU(shared_axes=shared_axes),
-#       tf.keras.layers.Dense(250),
-#       DPReLU(shared_axes=shared_axes),
-#       tf.keras.layers.Dense(latent_dim)
-#     ])
-
-#     self.decoder = tf.keras.Sequential([
-#       tf.keras.layers.InputLayer(input_shape=(latent_dim,)),
-#       tf.keras.layers.Dense(250),
-#       DPReLU(shared_axes=shared_axes),
-#       tf.keras.layers.Dense(500),
-#       DPReLU(shared_axes=shared_axes),
-#       tf.keras.layers.Dense(1000),
-#       DPReLU(shared_axes=shared_axes),
-#       tf.keras.layers.Dense(np.prod(input_dims)),
-#       tf.keras.layers.Reshape(input_dims)
-#     ])
-
 class MnistAutoencoder(BaseAutoEncoder):
-  def __init__(self, input_dims, latent_dim, activation='relu', shared_axes=None):
+  def __init__(self,
+              input_dims,
+              latent_dim,
+              activation='relu',
+              alpha=0.,
+              beta=1.,
+              shared_axes=None,
+              weight_initialization='xavier'):
+
     super(MnistAutoencoder, self).__init__()
+
+    # Initial value of alpha and beta
+    if alpha is not None:
+      alpha_initializer = tf.keras.initializers.Constant(value=alpha)
+    else:
+      alpha_initializer = 'zeros'
+
+    if beta is not None:
+      beta_initializer = tf.keras.initializers.Constant(value=beta)
+    else:
+      beta_initializer = 'ones'
+
+    # Weight initializer
+    if weight_initialization == 'xavier':
+      initializer = tf.keras.initializers.GlorotNormal()
+    elif weight_initialization == 'xavier_untruncated':
+      initializer = xavier_untruncated_normal()
+    elif weight_initialization == 'he':
+      initializer = tf.keras.initializers.he_normal()
+    elif weight_initialization == 'modified_he':
+      initializer = modified_he_normal()
+    elif (weight_initialization == 'dprelu') and (alpha is not None) and (beta is not None):
+      initializer = dprelu_normal(alpha=alpha, beta=beta)
+    elif (weight_initialization == 'prelu') and (alpha is not None):
+      initializer = prelu_normal(alpha=alpha)
+    else:
+      raise ValueError('No valid weight initializer')
 
     self.encoder = tf.keras.Sequential([
       tf.keras.layers.InputLayer(input_shape=input_dims),
       tf.keras.layers.Flatten(),
-      tf.keras.layers.Dense(1000),
-      activation_layers(activation=activation, shared_axes=shared_axes),
-      tf.keras.layers.Dense(500),
-      activation_layers(activation=activation, shared_axes=shared_axes),
-      tf.keras.layers.Dense(250),
-      activation_layers(activation=activation, shared_axes=shared_axes),
-      tf.keras.layers.Dense(latent_dim)
+      tf.keras.layers.Dense(1000,
+                            kernel_initializer=initializer),
+      activation_layers(activation=activation,
+                        alpha_initializer=alpha_initializer,
+                        beta_initializer=beta_initializer,
+                        shared_axes=shared_axes),
+      tf.keras.layers.Dense(500,
+                            kernel_initializer=initializer),
+      activation_layers(activation=activation,
+                        alpha_initializer=alpha_initializer,
+                        beta_initializer=beta_initializer,
+                        shared_axes=shared_axes),
+      tf.keras.layers.Dense(250,
+                            kernel_initializer=initializer),
+      activation_layers(activation=activation,
+                        alpha_initializer=alpha_initializer,
+                        beta_initializer=beta_initializer,
+                        shared_axes=shared_axes),
+      tf.keras.layers.Dense(latent_dim,
+                            kernel_initializer=initializer)
     ])
 
     self.decoder = tf.keras.Sequential([
       tf.keras.layers.InputLayer(input_shape=(latent_dim,)),
-      tf.keras.layers.Dense(250),
-      activation_layers(activation=activation, shared_axes=shared_axes),
-      tf.keras.layers.Dense(500),
-      activation_layers(activation=activation, shared_axes=shared_axes),
-      tf.keras.layers.Dense(1000),
-      activation_layers(activation=activation, shared_axes=shared_axes),
-      tf.keras.layers.Dense(np.prod(input_dims)),
+      tf.keras.layers.Dense(250,
+                            kernel_initializer=initializer),
+      activation_layers(activation=activation,
+                        alpha_initializer=alpha_initializer,
+                        beta_initializer=beta_initializer,
+                        shared_axes=shared_axes),
+      tf.keras.layers.Dense(500,
+                            kernel_initializer=initializer),
+      activation_layers(activation=activation,
+                        alpha_initializer=alpha_initializer,
+                        beta_initializer=beta_initializer,
+                        shared_axes=shared_axes),
+      tf.keras.layers.Dense(1000,
+                            kernel_initializer=initializer),
+      activation_layers(activation=activation,
+                        alpha_initializer=alpha_initializer,
+                        beta_initializer=beta_initializer,
+                        shared_axes=shared_axes),
+      tf.keras.layers.Dense(np.prod(input_dims),
+                            kernel_initializer=initializer),
       tf.keras.layers.Reshape(input_dims)
     ])
 
 class Cifar10ConvAutoencoder(BaseAutoEncoder):
-  def __init__(self, input_dims, latent_dim, hidden_dim=1024, activation='relu'):
+  def __init__(self,
+              input_dims,
+              latent_dim,
+              hidden_dim=1024,
+              activation='relu',
+              alpha=0.,
+              beta=1.,
+              weight_initialization='xavier'):
     super(Cifar10ConvAutoencoder, self).__init__()
+
+    # Initial value of alpha and beta
+    if alpha is not None:
+      alpha_initializer = tf.keras.initializers.Constant(value=alpha)
+    else:
+      alpha = 0.
+      alpha_initializer = 'zeros'
+
+    if beta is not None:
+      beta_initializer = tf.keras.initializers.Constant(value=beta)
+    else:
+      beta = 1.
+      beta_initializer = 'ones'
+
+    # Weight initializer
+    if weight_initialization == 'xavier':
+      initializer = tf.keras.initializers.GlorotNormal()
+    elif weight_initialization == 'xavier_untruncated':
+      initializer = xavier_untruncated_normal()
+    elif weight_initialization == 'he':
+      initializer = tf.keras.initializers.he_normal()
+    elif weight_initialization == 'modified_he':
+      initializer = modified_he_normal()
+    elif (weight_initialization == 'dprelu') and (alpha is not None) and (beta is not None):
+      initializer = dprelu_normal(alpha=alpha, beta=beta)
+    elif (weight_initialization == 'prelu') and (alpha is not None):
+      initializer = prelu_normal(alpha=alpha)
+    else:
+      raise ValueError('No valid weight initializer')
 
     self.encoder = tf.keras.Sequential([
       tf.keras.layers.InputLayer(input_shape=input_dims),
-      tf.keras.layers.Conv2D(64, kernel_size=3, strides=(2, 2)),
-      activation_layers(activation=activation, shared_axes=[1, 2]),
-      tf.keras.layers.Conv2D(128, kernel_size=3, strides=(2, 2)),
-      activation_layers(activation=activation, shared_axes=[1, 2]),
+      tf.keras.layers.Conv2D(64,
+                            kernel_size=3,
+                            strides=(2, 2),
+                            kernel_initializer=initializer),
+      activation_layers(activation=activation,
+                        alpha_initializer=alpha_initializer,
+                        beta_initializer=beta_initializer,
+                        shared_axes=[1, 2]),
+      tf.keras.layers.Conv2D(128,
+                            kernel_size=3,
+                            strides=(2, 2),
+                            kernel_initializer=initializer),
+      activation_layers(activation=activation,
+                        alpha_initializer=alpha_initializer,
+                        beta_initializer=beta_initializer,
+                        shared_axes=[1, 2]),
       tf.keras.layers.Flatten(),
-      tf.keras.layers.Dense(hidden_dim),
-      activation_layers(activation=activation, shared_axes=None),
+      tf.keras.layers.Dense(hidden_dim,
+                            kernel_initializer=initializer),
+      activation_layers(activation=activation,
+                        alpha_initializer=alpha_initializer,
+                        beta_initializer=beta_initializer,
+                        shared_axes=None),
       # No activation
-      tf.keras.layers.Dense(latent_dim)
+      tf.keras.layers.Dense(latent_dim,
+                            kernel_initializer=initializer)
     ])
 
     self.decoder = tf.keras.Sequential([
       tf.keras.layers.InputLayer(input_shape=(latent_dim)),
-      tf.keras.layers.Dense(hidden_dim, activation=None),
-      activation_layers(activation=activation, shared_axes=None),
-      tf.keras.layers.Dense(8*8*128, activation=None),
+      tf.keras.layers.Dense(hidden_dim,
+                            kernel_initializer=initializer),
+      activation_layers(activation=activation,
+                        alpha_initializer=alpha_initializer,
+                        beta_initializer=beta_initializer,
+                        shared_axes=None),
+      tf.keras.layers.Dense(8*8*128,
+                            kernel_initializer=initializer),
       tf.keras.layers.Reshape(target_shape=(8, 8, 128)),
-      activation_layers(activation=activation, shared_axes=[1, 2]),
-      tf.keras.layers.Conv2DTranspose(filters=64, kernel_size=3, strides=(2, 2), padding='SAME', activation=None),
-      activation_layers(activation=activation, shared_axes=[1, 2]),
+      activation_layers(activation=activation,
+                        alpha_initializer=alpha_initializer,
+                        beta_initializer=beta_initializer,
+                        shared_axes=[1, 2]),
+      tf.keras.layers.Conv2DTranspose(filters=64,
+                                      kernel_size=3,
+                                      strides=(2, 2),
+                                      padding='SAME',
+                                      kernel_initializer=initializer),
+      activation_layers(activation=activation,
+                        alpha_initializer=alpha_initializer,
+                        beta_initializer=beta_initializer,
+                        shared_axes=[1, 2]),
 
       # No activation
-      tf.keras.layers.Conv2DTranspose(filters=input_dims[-1], kernel_size=3, strides=(2, 2), padding='SAME')
+      tf.keras.layers.Conv2DTranspose(filters=input_dims[-1],
+                                      kernel_size=3,
+                                      strides=(2, 2),
+                                      padding='SAME',
+                                      kernel_initializer=initializer)
     ])
 
-def activation_layers(activation='relu', shared_axes=None):
+def activation_layers(activation='relu',
+                      alpha_initializer='zeros',
+                      beta_initializer='ones',
+                      shared_axes=None):
   if activation == 'relu':
     return tf.keras.layers.ReLU()
   elif activation == 'elu':
     return tf.keras.layers.ELU()
   elif activation == 'prelu':
-    return tf.keras.layers.PReLU(shared_axes=shared_axes)
+    return tf.keras.layers.PReLU(alpha_initializer=alpha_initializer,
+                                shared_axes=shared_axes)
   elif activation == 'frelu':
     return FReLU(shared_axes=shared_axes)
   elif activation == 'dprelu':
-    return DPReLU(shared_axes=shared_axes)
+    return DPReLU(alpha_initializer=alpha_initializer,
+                  beta_initializer=beta_initializer,
+                  shared_axes=shared_axes)
