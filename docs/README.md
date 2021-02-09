@@ -49,13 +49,19 @@ model = insert_layer_nonseq(model, '.*relu.*', factory, position='replace')
 
 ## Experiments
 ### Autoencoder
-Run autoencoder experiment by the command (see the full list of arguments in the file `tests/test_autoencoder.py`).
+Run autoencoder experiments by the command (see the full list of arguments in the file `tests/autoencoders/test_autoencoder.py`).
 ```
-python tests/test_autoencoder.py --activation {activation_name} --dataset mnist --latent_dims 30 --n_epochs 50
+python tests/autoencoders/test_autoencoder.py --activation {activation_name} --dataset mnist --latent_dims 30 --n_epochs 50
 ```
 
 ### ResNet50
-Run image classification using ResNet50 model experiment by the command (see the full list of arguments in the file `tests/test_resnet.py`).
+Run image classification using ResNet50 model experiment by the command (see the full list of arguments in the file `tests/resnet/test_resnet.py`).
 ```
-python tests/test_resnet.py --activation {activation_name} --dataset cifar10 --epochs 50 --batch_size 128
+python tests/resnet/test_resnet.py --activation {activation_name} --dataset cifar10 --epochs 50 --batch_size 128
+```
+
+### Weight initialization
+Run image classification using ResNet50 model with different weight initialization strategy experiment by the command (see the full list of arguments in the file `tests/activation_initialization/activation_init.py`).
+```
+python tests/activation_initialization/activation_init.py --activation {activation_name} --dataset cifar10 --epochs 50 --batch_size 128 --weight_initialization {weight initialization}
 ```
